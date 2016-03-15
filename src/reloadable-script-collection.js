@@ -45,7 +45,7 @@ function loader(dir, reloadContext) {
             modules = modules.concat(loader(fullPath, reloadContext));
         } else if(stat.isFile() &&
             path.extname(fullPath) === ".js") {
-            var module = undefined;
+            var module;
             try {
                 module = require('require-reload')(fullPath);                
             } catch(e) {

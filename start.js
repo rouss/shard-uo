@@ -1,12 +1,11 @@
 "use strict";
 
 var pkg = require("./package"),
-    Getopt = require("node-getopt"),
-    Shard = require("./src/shard");
+    Getopt = require("node-getopt");
 
 var getopt = new Getopt([
-    ['h', 'help',       'Display this help'],
-    ['v', 'version',    'Print version and exit']
+    ['h', 'help',           'Display this help'],
+    ['v', 'version',        'Print version and exit']
 ]);
 
 getopt.setHelp(
@@ -39,19 +38,19 @@ if(opt.options.help) {
 if(opt.argv.length !== 1) {
     getopt.showHelp();
     process.exit(1);
-} else {
-    // Set up the configuration system
-    require("./src/config")(opt.argv[0]);
-    
-    // These modules provide globals, so we pre-load them
-    require("./src/serialization");
-    require("./src/extensions");
-    require("./src/log");
-    require("./src/store");
-    
-    // Create and start a shard process
-    global.shard = Shard.create();
-    global.events = global.shard.eventSink;
-    require("./src/packets").reload();
-    global.shard.start();    
 }
+
+// Set up the configuration system
+require("./src/config")(opt.argv[0]);
+
+// These modules provide globals, so we pre-load them
+require("./src/serialization");
+require("./src/extensions");
+require("./src/log");
+require("./src/store");
+
+// Create and start a shard process
+global.shard = require("./src/shard").create();
+global.events = global.shard.eventSink;
+require("./src/packets").reload();
+global.shard.start();    

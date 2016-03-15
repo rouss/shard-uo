@@ -15,7 +15,9 @@ var haveLoaded = false;
 var currentCfg = {};
 
 function reload() {
-    log.info("Configuration reloading");
+    if(global.log) {
+        log.info("Configuration reloading");
+    }
     var newCfg;
     try {
         newCfg = require("require-reload")(configPath);
@@ -23,7 +25,9 @@ function reload() {
         if(!haveLoaded) {
             throw e;
         }
-        log.error("Error while loading configuration: " + e.stack);
+        if(global.log) {
+            log.error("Error while loading configuration: " + e.stack);
+        }
         return;
     }
     

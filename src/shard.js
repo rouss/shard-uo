@@ -33,7 +33,6 @@ function Shard() {
 /** Starts the shard process running.
  */
 Shard.prototype.start = function() {
-    var self = this;
     this.eventSink.reload();
     
     log.info("Starting " + config.name + " Shard");
@@ -70,7 +69,7 @@ Shard.prototype.start = function() {
         process.stdin.pipe(this.linereader);
         
         this.linereader.on("data", function(cmd) {
-            self.eventSink.emit("rootCommand", cmd);
+            events.emit("rootCommand", cmd);
         });
     }
 };

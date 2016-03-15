@@ -18,6 +18,15 @@ if [[ $response != "YES" ]]; then
     exit 0;
 fi
 
+if [[ -e /usr/local/ssl/openssl.cnf ]]; then
+    export OPENSSL_CONF=/usr/local/ssl/openssl.cnf
+elif [[ -e /usr/ssl/openssl.cnf ]]; then
+    export OPENSSL_CONF=/usr/ssl/openssl.cnf
+else
+    echo "Error: Unable to find openssl.cnf"
+    exit 1;
+fi
+
 rm -rf certs 2>/dev/null
 mkdir -p certs/trusted/cnc 2>/dev/null
 mkdir -p certs/trusted/shell 2>/dev/null
@@ -41,6 +50,25 @@ for fname in config/*.js; do
     openssl x509 -pubkey -noout -in "certs/$fname.pem" > "certs/trusted/cnc/$fname.pub"
 done
 
-echo
-echo "Process complete. Please remember to install trusted shell user's public keys"
-echo "in ./certs/trusted/shell ."
+username="$(whoami)"
+username="${username##*\\}"
+
+if [[ -e ~/.ssh/id_rsa.pub ]]; then
+    echo "Copying ~/.ssh/id_rsa.pub to ./certs/trusted/shell/$username.pub"
+    cp ~/.ssh/id_rsa.pub "./certs/trusted/shell/$username.pub"
+else
+    echo "You have no SSH key on this system. Generate now? (YES)"
+    read resp
+    if [[ "$resp" -eq "YES" || -z "$resp" ]]; then
+        ssh-keygen
+        if ! [[ -e ~/.ssh/id_rsa.pub ]]; then
+            echo "Error: cannot find ~/.ssh/id_rsa.pub"
+        else
+            cp ~/.ssh/id_rsa.pub "./certs/trusted/shell/$username.pub"
+        fi
+    fi
+fi
+
+echo "Use the name $username to connect to the SSH shell for all shards."
+echo "Please remember to install trusted shell user's public keys"
+echo "to ./certs/trusted/shell ."
