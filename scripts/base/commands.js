@@ -3,7 +3,10 @@
 // command handling system
 
 // Temporary root command hack
-events.on("rootCommand", function(cmd) {
+events.on("rootCommand", handleCommand);
+events.on("shellCommand", handleCommand);
+
+function handleCommand(cmd) {
     cmd = cmd.toLowerCase();
     switch(cmd) {
         case "shutdown":
@@ -30,4 +33,4 @@ events.on("rootCommand", function(cmd) {
             );
             break;
     }
-});
+}

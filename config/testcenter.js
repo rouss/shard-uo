@@ -10,20 +10,30 @@ var cfg = {
     name: "Test Center",
     // The directories to load scripts from (recusively). WARNING: DO NOT
     // BLINDLY LOAD THE ./scripts DIRECTORY. All scripts will be active.
+    // This would load scripts intended to only run on the master server
+    // with scripts intended to only run on the game server.
     scriptDirs: [
         path.join("scripts", "base")
     ],
+    // Path to the database directory
+    dbPath: path.join("saves", "testcenter"),
     // Endpoint configurations
     endpoints: {
         uop: { // UO packet endpoint
             host: "0.0.0.0",
             port: 3100
         },
-        cnc: { // Encrypted Command and Control endpoint
+        cnc: { // Encrypted command and control endpoint
             host: "0.0.0.0",
             port: 3101,
             key: path.join("certs", "testcenter.key.pem"),
-            cert: path.join("certs", "testcenter.pem"),
+            trustedKeys: path.join("certs", "trusted", "cnc"),
+        },
+        shell: { // Encrypted admin shell endpoint
+            host: "0.0.0.0",
+            port: 3102,
+            key: path.join("certs", "testcenter.key.pem"),
+            trustedKeys: path.join("certs", "trusted", "shell"),
         },
     },
     // Information about how to connect to the master server

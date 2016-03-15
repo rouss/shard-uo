@@ -20,10 +20,6 @@ function UOPEndpoint(host, port) {
     this.server = null;
     /// All {@link NetState} objects by uuid
     this.states = {};
-    /// The queue of all packet objects waiting for publication
-    this.packetQueue = [];
-    /// If true we are shutting down
-    this.shuttingDown = false;
 }
 
 /** Starts the endpoint.
@@ -31,6 +27,8 @@ function UOPEndpoint(host, port) {
 UOPEndpoint.prototype.start = function() {
     var self = this;
     this.server = net.createServer(function(socket) {
+        log.debug("Game client connected from " + socket.remoteAddress);
+        
         var state = new NetState(socket, self);
         socket.netState = state;
         self.states[state.uuid] = state;
@@ -63,7 +61,6 @@ UOPEndpoint.prototype.start = function() {
     }, function() {
         log.info("UOPEndpoint listening on " + self.host + ":" + self.port);
     });
-    setImmediate(doProcessQueue, this);
 };
 
 /** Kills the endpoint with synchronous calls.
@@ -82,8 +79,6 @@ UOPEndpoint.prototype.kill = function() {
 /** Shuts down the endpoint gracefully.
  */
 UOPEndpoint.prototype.shutdown = function() {
-    this.shuttingDown = true;
-    this.processQueue();
     this.kill();
 };
 
@@ -96,36 +91,6 @@ UOPEndpoint.prototype.disconnect = function(state) {
         state.socket.end();
     }
     delete this.states[state.uuid];
-};
-
-/** Queues a single client packet object onto the queue of packets to be
- * emitted as events.
- * 
- * @param {Packet} packet The packet object
- */
-UOPEndpoint.prototype.queuePacket = function(packet) {
-    this.packetQueue.push(packet);
-};
-
-// Internal dispatch function
-function doProcessQueue(self) {
-    self.processQueue();
-}
-
-/** Processes the entire pending client packet queue.
- */
-UOPEndpoint.prototype.processQueue = function() {
-    while(this.packetQueue.length > 0) {
-        var packet = this.packetQueue.shift();
-        try {
-            events.emit(packet.packetName, packet);            
-        } catch(e) {
-            log.error("Error in packet handler " + packet.packetName + ": " + e.stack);
-        }
-    }
-    if(!this.shuttingDown) {
-        setImmediate(doProcessQueue, this);
-    }
 };
 
 module.exports = UOPEndpoint;

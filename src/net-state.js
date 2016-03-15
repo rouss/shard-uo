@@ -56,7 +56,7 @@ NetState.prototype.handleData = function handleData(buf) {
         }
         this.packet.decode(this.inbuf);
         if(this.packet.decoded) {
-            this.parent.queuePacket(this.packet);
+            events.emit(this.packet.packetName, this.packet);
             this.packet = null;
         }
         else {

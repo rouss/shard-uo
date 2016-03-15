@@ -7,7 +7,8 @@
 
 var EventSink = require("./event-sink"),
     UOPEndpoint = require("./uop-endpoint"),
-    readline = require("readline"),
+    SSHEndpoint = require("./ssh-endpoint"),
+    LineTransform = require('node-line-reader').LineTransform,
     store = require("./store");
 
 /** Implements a Shard server. Shard servers listen for UO client packets,
@@ -26,8 +27,7 @@ function Shard() {
     this.eventSink = new EventSink();
     /// All endpoints which the shard has
     this.endpoints = [];
-    /// The readline interface for the local tty, if present
-    this.readline = null;
+    this.linereader = null;
 }
 
 /** Starts the shard process running.
@@ -44,26 +44,69 @@ Shard.prototype.start = function() {
     
     var cfg = config.endpoints.uop;
     if(cfg) {
-        endpoint = new UOPEndpoint(this.eventSink, cfg.host, cfg.port);
+        endpoint = new UOPEndpoint(cfg.host, cfg.port);
         endpoint.start();
         this.endpoints.push(endpoint);        
     }
     
+    cfg = config.endpoints.shell;
+    if(cfg) {
+        endpoint = new SSHEndpoint(cfg.host, cfg.port, cfg.key,
+            cfg.trustedKeys, handleShellLine);
+        endpoint.start();
+        this.endpoints.push(endpoint);
+    }
+    
+    cfg = config.endpoints.cnc;
+    if(cfg) {
+        endpoint = new SSHEndpoint(cfg.host, cfg.port, cfg.key,
+            cfg.trustedKeys, handleCncLine);
+        endpoint.start();
+        this.endpoints.push(endpoint);
+    }
+    
     if(process.stdin.isTTY) {
-        this.readline = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-            terminal: false
-        });
+        this.linereader = new LineTransform();
+        process.stdin.pipe(this.linereader);
         
-        this.readline.on("line", function(cmd) {
+        this.linereader.on("data", function(cmd) {
             self.eventSink.emit("rootCommand", cmd);
         });
-        
-        this.readline.resume();
-        this.readline.prompt();
     }
 };
+
+// Internal shell line handler
+function handleShellLine(line) {
+    /** Published whenever an interactive user shell
+     * issues a command.
+     * 
+     * @event SSHEndpoint#shellCommand
+     * @type {Object}
+     * @property {SSHState} state The state sending the command
+     * @property {String} value The command entered
+     */
+    return { name: "shellCommand", value: line };
+}
+
+// Internal CNC line handler
+function handleCncLine(line) {
+    var obj;
+    try {
+        obj = JSON.parse(line);
+    } catch(e) {
+        log.error("Failed parsing CNC object: " + e);
+        return;
+    }
+    /** Published whenever a CNC shell sends a command
+     * object.
+     * 
+     * @event SSHEndpoint#cncCommand
+     * @type {Object}
+     * @property {SSHState} state The state sending the command
+     * @property {Object} value The command object
+     */
+    return { name: "cncCommand", value: obj };
+}
 
 /** Call this method to stop the server using only synchronous methods.
  */
@@ -74,8 +117,9 @@ Shard.prototype.kill = function() {
         }
     }
     
-    if(this.readline) {
-        this.readline.close();
+    if(this.linereader) {
+        this.linereader.end();
+        process.stdin.destroy();
     }
 };
 
@@ -86,6 +130,11 @@ Shard.prototype.shutdown = function() {
         if(this.endpoints.hasOwnProperty(i)) {
             this.endpoints[i].shutdown();
         }
+    }
+    
+    if(this.linereader) {
+        this.linereader.end();
+        process.stdin.destroy();
     }
 };
 
@@ -102,9 +151,15 @@ exports.create = function() {
     });
     process.once("SIGINT", function() {
         log.info("Recieved SIGINT, attempting graceful shutdown");
+        if(process.stdin.isTTY) {
+            console.log("Press Enter to Continue...");
+        }
         ret.shutdown();
         process.once("SIGINT", function() {
             log.info("Recieved second SIGINT, attempting forceful shutdown");
+            if(process.stdin.isTTY) {
+                console.log("Press Enter to Continue...");
+            }
             ret.kill();
         });
     });

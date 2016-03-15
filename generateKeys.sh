@@ -19,7 +19,8 @@ if [[ $response != "YES" ]]; then
 fi
 
 rm -rf certs 2>/dev/null
-mkdir certs 2>/dev/null
+mkdir -p certs/trusted/cnc 2>/dev/null
+mkdir -p certs/trusted/shell 2>/dev/null
 
 for fname in config/*.js; do
     fname="${fname%*.js}"
@@ -37,5 +38,9 @@ for fname in config/*.js; do
         -subj '//C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.org' \
         -keyout "certs/$fname.key.pem" \
         -out "certs/$fname.pem" >/dev/null 2>/dev/null
-    openssl x509 -pubkey -noout -in "certs/$fname.pem" > "certs/$fname.pub"
+    openssl x509 -pubkey -noout -in "certs/$fname.pem" > "certs/trusted/cnc/$fname.pub"
 done
+
+echo
+echo "Process complete. Please remember to install trusted shell user's public keys"
+echo "in ./certs/trusted/shell ."
