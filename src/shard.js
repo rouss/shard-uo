@@ -7,7 +7,7 @@
 
 var EventSink = require("./event-sink"),
     UOPEndpoint = require("./uop-endpoint"),
-    SSHEndpoint = require("./ssh-endpoint"),
+    CNCEndpoint = require("./cnc-endpoint"),
     LineTransform = require('node-line-reader').LineTransform,
     store = require("./store");
 
@@ -48,18 +48,10 @@ Shard.prototype.start = function() {
         this.endpoints.push(endpoint);        
     }
     
-    cfg = config.endpoints.shell;
-    if(cfg) {
-        endpoint = new SSHEndpoint(cfg.host, cfg.port, cfg.key,
-            cfg.trustedKeys, handleShellLine);
-        endpoint.start();
-        this.endpoints.push(endpoint);
-    }
-    
     cfg = config.endpoints.cnc;
     if(cfg) {
-        endpoint = new SSHEndpoint(cfg.host, cfg.port, cfg.key,
-            cfg.trustedKeys, handleCncLine);
+        endpoint = new CNCEndpoint(cfg.host, cfg.port, cfg.key, cfg.cert,
+            cfg.apiKeys);
         endpoint.start();
         this.endpoints.push(endpoint);
     }
@@ -73,39 +65,6 @@ Shard.prototype.start = function() {
         });
     }
 };
-
-// Internal shell line handler
-function handleShellLine(line) {
-    /** Published whenever an interactive user shell
-     * issues a command.
-     * 
-     * @event SSHEndpoint#shellCommand
-     * @type {Object}
-     * @property {SSHState} state The state sending the command
-     * @property {String} value The command entered
-     */
-    return { name: "shellCommand", value: line };
-}
-
-// Internal CNC line handler
-function handleCncLine(line) {
-    var obj;
-    try {
-        obj = JSON.parse(line);
-    } catch(e) {
-        log.error("Failed parsing CNC object: " + e);
-        return;
-    }
-    /** Published whenever a CNC shell sends a command
-     * object.
-     * 
-     * @event SSHEndpoint#cncCommand
-     * @type {Object}
-     * @property {SSHState} state The state sending the command
-     * @property {Object} value The command object
-     */
-    return { name: "cncCommand", value: obj };
-}
 
 /** Call this method to stop the server using only synchronous methods.
  */

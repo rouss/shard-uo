@@ -1,5 +1,18 @@
 #! bash
 
+hexDigits=( 0 1 2 3 4 5 6 7 8 9 A B C D E F )
+
+function makeApiKey {
+    name="$1"
+    
+    # Generate 1024-bit API key
+    key=""
+    for (( i = 0; i < 256; ++i )); do
+        key="$key${hexDigits[(( $RANDOM % 16 ))]}"
+    done
+    echo $key > "keys/$name"
+}
+
 echo "Generating certificates for all configuration files found in ./config"
 echo "All certificates must be updated every 90 days!"
 
@@ -28,9 +41,10 @@ else
     exit 1;
 fi
 
-rm -rf certs/auth_cnc certs/shards 2>/dev/null
-mkdir -p certs/auth_cnc 2>/dev/null
-mkdir -p certs/shards
+rm -rf certs 2>/dev/null
+rm -rf keys 2>/dev/null
+mkdir certs 2>/dev/null
+mkdir keys 2>/dev/null
 
 for fname in config/*.js; do
     fname="${fname%*.js}"
@@ -38,17 +52,19 @@ for fname in config/*.js; do
     if [[ $fname == "example" ]]; then
         continue
     fi
-    echo "$fname..."
-#    openssl req \
-#        -new \
-#        -newkey rsa:4096 \
-#        -days 365 \
-#        -nodes \
-#        -x509 \
-#        -subj '//C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.org' \
-#        -keyout "certs/$fname.key.pem" \
-#        -out "certs/$fname.pem" >/dev/null 2>/dev/null
-#    openssl x509 -pubkey -noout -in "certs/$fname.pem" > "certs/trusted/cnc/$fname.pub"
-    ssh-keygen -q -b 2048 -t rsa -N "" -f "certs/shards/$fname"
-    cp "certs/shards/$fname.pub" "certs/auth_cnc"
+    
+    # Generate 4096-bit RSA key and certificate
+    echo -n "$fname: Generating Certificate, "
+    openssl req \
+        -new \
+        -newkey rsa:4096 \
+        -days 365 \
+        -nodes \
+        -x509 \
+        -subj '//C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.org' \
+        -keyout "certs/$fname.key.pem" \
+        -out "certs/$fname.cert.pem" >/dev/null 2>/dev/null
+    
+    echo "API Key"
+    makeApiKey "$fname"
 done
