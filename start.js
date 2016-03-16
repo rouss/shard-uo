@@ -4,6 +4,7 @@ var pkg = require("./package"),
     Getopt = require("node-getopt");
 
 var getopt = new Getopt([
+    ['p', 'print-config',   'Dumps the configuration information to stdout and exits. Used by some utility scripts.'],
     ['h', 'help',           'Display this help'],
     ['v', 'version',        'Print version and exit']
 ]);
@@ -43,14 +44,49 @@ if(opt.argv.length !== 1) {
 // Set up the configuration system
 require("./src/config")(opt.argv[0]);
 
-// These modules provide globals, so we pre-load them
-require("./src/serialization");
-require("./src/extensions");
-require("./src/log");
-require("./src/store");
+if(opt.options['print-config']) {
+    printConfigObject(config, "");
+} else {
+    // These modules provide globals, so we pre-load them
+    require("./src/serialization");
+    require("./src/extensions");
+    require("./src/log");
+    require("./src/store");
 
-// Create and start a shard process
-global.shard = require("./src/shard").create();
-global.events = global.shard.eventSink;
-require("./src/packets").reload();
-global.shard.start();    
+    // Create and start a shard process
+    global.shard = require("./src/shard").create();
+    global.events = global.shard.eventSink;
+    require("./src/packets").reload();
+    global.shard.start();
+}
+
+function printConfigObject(obj, parentName) {
+    for(var k in obj) {
+        if(!obj.hasOwnProperty(k)) {
+            continue;
+        }
+        
+        var name;
+        if(parentName !== "") {
+            name = parentName + "." + k;
+        } else {
+            name = k;
+        }
+        
+        var val = obj[k];
+        if(typeof val === "function") {
+            continue;
+        } else if(typeof val === "object" &&
+            val !== null) {
+            printConfigObject(val, name);
+        } else {
+            if(typeof val === "undefined") {
+                console.log(name + " undefined");
+            } else if(val === null) {
+                console.log(name + " null");                
+            } else {
+                console.log(name + " " + val.toString());
+            }
+        }
+    }
+}

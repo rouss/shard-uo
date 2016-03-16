@@ -35,7 +35,15 @@ function ReloadableScriptCollection(paths, autoReload) {
 // Internal function to load all the scripts out of a directory
 function loader(dir, reloadContext) {
     var modules = [];
-    var paths = fs.readdirSync(dir);
+    var paths;
+    try {
+        paths = fs.readdirSync(dir);
+    } catch(e) {
+        if(e.code === "ENOENT") {
+            return;
+        }
+        throw e;
+    }
     for(var i = 0; i < paths.length; ++i) {
         var fullPath = path.join(dir, paths[i]);
         fullPath = path.resolve(fullPath);

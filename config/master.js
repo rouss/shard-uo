@@ -7,15 +7,17 @@ var path = require("path");
 
 // The simple name of the shard, usually the same as the file name without ext.
 var name = "master";
+// The base port for listeners. Typically increase this in increments of 10.
+var basePort = 3000;
 
 var cfg = {
-    // The name of this shard
+    // The display name of this shard
     name: "Master",
     // The directories to load scripts from (recusively). WARNING: DO NOT
     // BLINDLY LOAD THE ./scripts DIRECTORY. All scripts will be active.
     scriptDirs: [
         path.join("scripts", "base"),
-        path.join("scripts", "master"),
+        path.join("scripts", name),
     ],
     // Path to the database directory
     dbPath: path.join("saves", name),
@@ -23,19 +25,21 @@ var cfg = {
     endpoints: {
         uop: { // UO packet endpoint
             host: "0.0.0.0",
-            port: 3100,
+            // Special port for the login server. This is the well-known RunUO
+            // port that is built into most UO assistants.
+            port: 2593,
         },
         cnc: { // Encrypted command and control endpoint
             host: "0.0.0.0",
-            port: 3101,
-            key: path.join("certs", name + ".key.pem"),
-            trustedKeys: path.join("certs", "trusted", "cnc"),
+            port: basePort + 1,
+            key: path.join("certs", "shards", name),
+            trustedKeys: path.join("certs", "auth_cnc"),
         },
         shell: { // Encrypted admin shell endpoint
             host: "0.0.0.0",
-            port: 3102,
-            key: path.join("certs", name + ".key.pem"),
-            trustedKeys: path.join("certs", "trusted", "shell"),
+            port: basePort + 2,
+            key: path.join("certs", "shards", name),
+            trustedKeys: path.join("certs", "auth_shell"),
         },
     },
     // Information about how to connect to the master server

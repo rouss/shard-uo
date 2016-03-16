@@ -68,7 +68,7 @@ SSHEndpoint.prototype.start = function() {
         hostKeys: [fs.readFileSync(this.keyPath)]
     }, function(client, info) {
         log.debug("SSH client connected from " + info.ip);
-        
+        /*
         client.on("authentication", function(ctx) {
             // Only accept public key authentication
             if(ctx.method !== "publickey" ||
@@ -131,6 +131,7 @@ SSHEndpoint.prototype.start = function() {
                 });
             });
         });
+        */
     });
     
     this.server.listen({
