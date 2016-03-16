@@ -1,0 +1,11 @@
+{
+  "name": "shard-uo-www",
+  "version": "0.0.0",
+  "description": "Web admin interface for ShardUO",
+  "main": "start.js",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "author": "Norman B. Lancaster",
+  "license": "AGPL-3.0"
+}
