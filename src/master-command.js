@@ -27,12 +27,17 @@ function MasterCommand(host, port, keyName, keyPath) {
  *   to execute. Note that commmand names are CASE SENSETIVE.
  * @param {String} event The name of the event to publish when the transaction
  *   is complete. The event will recieve the response object from the CNC
- *   transaction as it's parameter. The response object will have one
- *   additional property, success, which will be truthy if the transaction was
- *   successful.
+ *   transaction as it's parameter. The response object will have two
+ *   additional properties. The first is success, which will be truthy if the
+ *   transaction was successful. The second is ctx, which is the context object
+ *   passed as the third parameter to this function.
+ * @param {Object} ctx The context objet for the event.
  */
-MasterCommand.prototype.command = function(cnc, event) {
+MasterCommand.prototype.command = function(cnc, event, ctx) {
     var self = this;
+    if(!ctx) {
+        ctx = {};
+    }
     var req = https.request({
         host: self.host,
         port: self.port,
@@ -69,7 +74,8 @@ MasterCommand.prototype.command = function(cnc, event) {
                 obj = {};
             }
             obj.sucess = res.statusCode === 200;
-            events.emit(event);
+            obj.ctx = ctx;
+            events.emit(event, ctx);
         });
     });
     

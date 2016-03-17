@@ -38,6 +38,10 @@ events.on("packetLoginSeed", function(packet) {
 });
 
 events.on("packetLoginRequest", function(packet) {
+    // Clear the current netState if needed
+    delete packet.netState.isLoggedIn;
+    delete packet.netState.account;
+    
     if(!packet.netState.isClientVersionOk) {
         packet.netState.disconnect();
         return;
@@ -98,7 +102,7 @@ events.on("packetLoginRequest", function(packet) {
         }
         
         // If we reach here everything is OK
-        log.info("Account " + packet.accountName + " logged in");
+        log.debug("Account " + packet.accountName + " logged in");
         
         /** If true the netState has been authenticated somehow.
          * 
@@ -106,11 +110,12 @@ events.on("packetLoginRequest", function(packet) {
          * @type {Boolean}
          */
         packet.netState.isLoggedIn = true;
+        packet.netState.account = account;
         /** Published when the client has successfully logged in.
          * 
          * @event Account#accountLoginSuccess
-         * @type {Account}
+         * @type {NetState}
          */
-        events.emit("accountLoginSuccess", account);
+        events.emit("accountLoginSuccess", packet.netState);
     });
 });

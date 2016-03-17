@@ -36,3 +36,5 @@ docs/generated
 certs
 keys
 saves
+www/static/lib
+

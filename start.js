@@ -54,6 +54,7 @@ if(opt.options['print-config']) {
             require("./src/extensions");
             require("./src/log");
             require("./src/store");
+            require("./src/time.js");
 
             // Create and start a shard process
             global.shard = require("./src/shard").create();

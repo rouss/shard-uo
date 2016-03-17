@@ -94,6 +94,8 @@
         "log": false,
         "config": false,
         "events": false,
-        "database": false
+        "database": false,
+        "time": false,
+        "random": false
     }
 }

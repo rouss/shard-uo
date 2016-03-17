@@ -112,6 +112,8 @@ CNCEndpoint.prototype.start = function() {
              * @property {String} command The name of the command requested
              * @property {Object} response The JSON object to be returned to
              *   the requestor.
+             * @property {Boolean} failed If truthy indicates that this request
+             *   has failed for some reason.
              */
             obj.response = {};
             if(typeof obj.command === "string") {
@@ -129,8 +131,13 @@ CNCEndpoint.prototype.start = function() {
                 res.end();
                 return;
             }
-            res.statusCode = 200;
-            res.statusMessage = "OK";
+            if(obj.failed) {
+                res.statusCode = 500;
+                res.statusMessage = "Internal Server Error";
+            } else {
+                res.statusCode = 200;
+                res.statusMessage = "OK";
+            }
             res.end(resStr);
         });
     }).listen(
