@@ -1,0 +1,29 @@
+{
+  "name": "shard-uo",
+  "description": "An Ultima Online shard emulator",
+  "main": "start.js",
+  "authors": [
+    "Norman B. Lancaster"
+  ],
+  "license": "AGPL-3.0",
+  "keywords": [
+    "game",
+    "ultima",
+    "multiplayer",
+    "node",
+    "javascript"
+  ],
+  "homepage": "https://github.com/qbradq/shard-uo",
+  "moduleType": [],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.6"
+  }
+}

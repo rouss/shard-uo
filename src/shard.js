@@ -8,8 +8,8 @@
 var EventSink = require("./event-sink"),
     UOPEndpoint = require("./uop-endpoint"),
     CNCEndpoint = require("./cnc-endpoint"),
-    LineTransform = require('node-line-reader').LineTransform,
-    store = require("./store");
+    store = require("./store"),
+    packets = require("./packets");
 
 /** Implements a Shard server. Shard servers listen for UO client packets,
  * SSH connections from administrators, and TLS-encrpyted JSON streams for
@@ -27,7 +27,6 @@ function Shard() {
     this.eventSink = new EventSink();
     /// All endpoints which the shard has
     this.endpoints = [];
-    this.linereader = null;
 }
 
 /** Starts the shard process running.
@@ -55,15 +54,22 @@ Shard.prototype.start = function() {
         endpoint.start();
         this.endpoints.push(endpoint);
     }
-    
-    if(process.stdin.isTTY) {
-        this.linereader = new LineTransform();
-        process.stdin.pipe(this.linereader);
-        
-        this.linereader.on("data", function(cmd) {
-            events.emit("rootCommand", cmd);
-        });
+};
+
+/** Call this method to reload everything.
+ */
+Shard.prototype.reload = function() {
+    config.reload();
+    for(var i in this.endpoints) {
+        if(this.endpoints.hasOwnProperty(i)) {
+            var endpoint = this.endpoints[i];
+            if(typeof endpoint.reload === "function") {
+                endpoint.reload();
+            }
+        }
     }
+    packets.reload();
+    events.reload();
 };
 
 /** Call this method to stop the server using only synchronous methods.
@@ -74,11 +80,6 @@ Shard.prototype.kill = function() {
             this.endpoints[i].kill();
         }
     }
-    
-    if(this.linereader) {
-        this.linereader.end();
-        process.stdin.destroy();
-    }
 };
 
 /** Call this method to gracefully stop the server.
@@ -88,11 +89,6 @@ Shard.prototype.shutdown = function() {
         if(this.endpoints.hasOwnProperty(i)) {
             this.endpoints[i].shutdown();
         }
-    }
-    
-    if(this.linereader) {
-        this.linereader.end();
-        process.stdin.destroy();
     }
 };
 

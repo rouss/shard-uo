@@ -18,7 +18,7 @@ getopt.setHelp(
     "\n" +
     "  shard_name     The name of the shard to start. This must match the name of a\n" +
     "                 configuration file (minus extension) in ./config other than\n" +
-    "                 default\n" +
+    "                 example\n" +
     "[[OPTIONS]]\n" +
     "\n" +
     "Installation.... git clone https://github.com/qbradq/shard-uo.git\n" +
@@ -47,17 +47,24 @@ require("./src/config")(opt.argv[0]);
 if(opt.options['print-config']) {
     printConfigObject(config, "");
 } else {
-    // These modules provide globals, so we pre-load them
-    require("./src/serialization");
-    require("./src/extensions");
-    require("./src/log");
-    require("./src/store");
+    switch(config.type) {
+        case "shard":
+            // These modules provide globals, so we pre-load them
+            require("./src/serialization");
+            require("./src/extensions");
+            require("./src/log");
+            require("./src/store");
 
-    // Create and start a shard process
-    global.shard = require("./src/shard").create();
-    global.events = global.shard.eventSink;
-    require("./src/packets").reload();
-    global.shard.start();
+            // Create and start a shard process
+            global.shard = require("./src/shard").create();
+            global.events = global.shard.eventSink;
+            require("./src/packets").reload();
+            global.shard.start();
+            break;
+        case "www":
+            require("./www/server");
+            break;
+    }
 }
 
 function printConfigObject(obj, parentName) {

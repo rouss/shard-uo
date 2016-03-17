@@ -1,11 +1,11 @@
-/** Example configuration file. To create a Shard server configuration file,
- * make a copy of this file and place it in the config directory.
+/** Default Master / Login server configuration. Generally this file should not
+ * be altered.
  */
 "use strict";
 
 var path = require("path");
 
-// The simple name of the shard, usually the same as the file name without ext.
+// Name of the config file with .js extension
 var name = "master";
 // The base port for listeners. Typically increase this in increments of 10.
 var basePort = 3000;
@@ -16,7 +16,7 @@ var cfg = {
     // The directories to load scripts from (recusively). WARNING: DO NOT
     // BLINDLY LOAD THE ./scripts DIRECTORY. All scripts will be active.
     scriptDirs: [
-        path.join("scripts", "base"),
+        path.join("scripts", "common"),
         path.join("scripts", name),
     ],
     // Path to the database directory
@@ -47,6 +47,8 @@ var cfg = {
     requiredVersion: [ 7, 0, 49, undefined ],
     // Log file path
     logFile: path.join("logs", name + ".log"),
+    // Informs the various tools what kind of config this is
+    type: "shard",
 };
 
 module.exports = cfg;
