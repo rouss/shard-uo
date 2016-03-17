@@ -9,6 +9,8 @@ var path = require("path");
 var name = "www";
 
 var cfg = {
+    // ID of this server
+    id: name,
     // Host to bind to
     host: "0.0.0.0",
     // Port to bind to

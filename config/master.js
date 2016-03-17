@@ -11,6 +11,8 @@ var name = "master";
 var basePort = 3000;
 
 var cfg = {
+    // ID of this server
+    id: name,
     // The display name of this shard
     name: "Master",
     // The directories to load scripts from (recusively). WARNING: DO NOT

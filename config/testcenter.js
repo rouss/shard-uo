@@ -10,6 +10,8 @@ var name = "testcenter";
 var basePort = 3010;
 
 var cfg = {
+    // ID of this server
+    id: name,
     // The display name of this shard
     name: "Test Center",
     // The directories to load scripts from (recusively). WARNING: DO NOT

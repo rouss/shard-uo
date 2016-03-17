@@ -1,7 +1,8 @@
 "use strict";
 
 var ReloadableScriptCollection = require("./reloadable-script-collection"),
-    ctorManager = require("./ctor-manager");
+    ctorManager = require("./ctor-manager"),
+    uuid = require("uuid");
 
 /** Provides an evented messaging services similar to EventEmitter. This class
  * is designed to provide script management for scripts that are designed to
@@ -24,6 +25,25 @@ function EventSink() {
     this.scripts = new ReloadableScriptCollection(config.scriptDirs, false);
     /// Map of subscription pools
     this.subs = {};
+    /// Map of all timers
+    this.timers = {};
+    /// If true blocks all event emissions
+    this.doNotEmit = false;
+}
+
+// Internal function to clear all registered timers in a given map
+function clearTimers(map) {
+    for(var k in map) {
+        if(!map.hasOwnProperty(k)) {
+            continue;
+        }
+        var timer = map[k];
+        if(timer.isInterval) {
+            clearInterval(timer.timer);
+        } else {
+            clearTimeout(timer.timer);
+        }
+    }
 }
 
 /** Forces a reload of all scripts.
@@ -31,16 +51,74 @@ function EventSink() {
 EventSink.prototype.reload = function() {
     log.info("Event scripts reloading");
     
+    this.doNotEmit = true;
     var oldSubs = this.subs;
     this.subs = {};
+    var oldTimers = this.timers;
+    this.timers = {};
     
     ctorManager.beforeReload();
     if(!this.scripts.reload()) {
         this.subs = oldSubs;
+        clearTimers(this.timers);
+        this.timers = oldTimers;
         ctorManager.afterReloadFailed();
+        this.doNotEmit = false;
         return;
     }
+    clearTimers(oldTimers);
     ctorManager.afterReload();
+    this.doNotEmit = false;
+};
+
+/** Set a one-shot timer.
+ * 
+ * @param {String} event Event name to fire after the delay
+ * @param {Object} param The parameter object to emit with the event
+ * @param {Number} delay The delay in miliseconds (approximate). Use the
+ *   @{link module:Time} module to calculate this value.
+ */
+EventSink.prototype.setTimeout = function(event, param, delay) {
+    var self = this;
+    var id = uuid.v4();
+    var timer = setTimeout(function() {
+        delete self.timers[id];
+        self.emit(event, param);
+    }, delay);
+    this.timers[id] = {
+        timer: timer,
+        event: event,
+        param: param,
+        delay: delay,
+        isInterval: false
+    };
+};
+
+/** Set a recurring timer.
+ * 
+ * @param {String} event Event name to fire after the delay
+ * @param {Object} param The parameter object to emit with the event
+ * @param {Number} delay The delay in miliseconds (approximate) between
+ *   ocurrences. Use the @{link module:Time} module to calculate this value.
+ * @param {Boolean} immediate Optional, defaults to false. If true, fire the
+ *   event once immediately.
+ */
+EventSink.prototype.setInterval = function(event, param, delay, immediate) {
+    var self = this;
+    var id = uuid.v4();
+    var timer = setInterval(function() {
+        self.emit(event, param);
+    }, delay);
+    this.timers[id] = {
+        timer: timer,
+        event: event,
+        param: param,
+        delay: delay,
+        isInterval: true
+    };
+    if(immediate) {
+        this.emit(event, param);
+    }
 };
 
 /** Subscribe to an event.
@@ -69,6 +147,9 @@ EventSink.prototype.on = function(name, func) {
  *   used to short-circut the execution of an event pool.
  */
 EventSink.prototype.emit = function(name, param) {
+    if(this.doNotEmit) {
+        return;
+    }
     var subs = this.subs[name];
     if(subs === undefined ||
         subs.length === 0) {

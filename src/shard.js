@@ -8,6 +8,7 @@
 var EventSink = require("./event-sink"),
     UOPEndpoint = require("./uop-endpoint"),
     CNCEndpoint = require("./cnc-endpoint"),
+    MasterCommand = require("./master-command"),
     store = require("./store"),
     packets = require("./packets");
 
@@ -27,6 +28,8 @@ function Shard() {
     this.eventSink = new EventSink();
     /// All endpoints which the shard has
     this.endpoints = [];
+    /// The master CNC connector
+    this.master = null;
 }
 
 /** Starts the shard process running.
@@ -54,6 +57,13 @@ Shard.prototype.start = function() {
         endpoint.start();
         this.endpoints.push(endpoint);
     }
+    
+    this.master = new MasterCommand(
+        config.masterConnector.host,
+        config.masterConnector.port,
+        config.id,
+        config.masterConnector.apiKey
+    );
 };
 
 /** Call this method to reload everything.
