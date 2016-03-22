@@ -9,10 +9,8 @@
 function GameServerInfo() {
     /// The display name of the game server
     this.name = "Unamed Game Server";
-    /// The limit of concurrently connected players
-    this.playerLimit = 100;
-    /// The count of currently connected players
-    this.playerCount = 0;
+    /// How full the shard is
+    this.percentFull = 0;
     /// The GMT offset of the server (only positive values)
     this.gmtOffset = 0;
     /// The IPv4 address the server is bound to
@@ -54,11 +52,8 @@ events.on("cncCommandUpdateShard", function(cnc) {
     if(cnc.port) {
         info.port = cnc.port;
     }
-    if(cnc.playerLimit) {
-        info.playerLimit = cnc.playerLimit;
-    }
-    if(cnc.playerCount) {
-        info.playerCount = cnc.playerCount;
+    if(cnc.percentFull) {
+        info.percentFull = cnc.percentFull;
     }
     if(cnc.gmtOffset) {
         info.gmtOffset = cnc.gmtOffset;
@@ -102,10 +97,10 @@ events.on("packetSelectGameServer", function(packet) {
         return;
     }
     if(packet.server < 0 ||
-        packet.server >= packet.netState.gameServerList.length) {
+        packet.server >= packet.netState.gameServerList.servers.length) {
         return;
     }
-    var info = packet.netState.gameServerList[packet.server];
+    var info = packet.netState.gameServerList.servers[packet.server];
     delete packet.netState.gameServerList;
     packet.netState.selectedServer = info;
     /** Published when the client has selected a server to connect to.

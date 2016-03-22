@@ -121,9 +121,10 @@ CNCEndpoint.prototype.start = function() {
             } else {
                 events.emit("cncCommand", obj);
             }
+
             var resStr;
             try {
-                resStr =JSON.stringify(obj.response);
+                resStr = JSON.stringify(obj.response);
             } catch(e) {
                 log.error("Failed to stringify CNC response object: " + e);
                 res.statusCode = 500;
@@ -131,6 +132,7 @@ CNCEndpoint.prototype.start = function() {
                 res.end();
                 return;
             }
+            
             if(obj.failed) {
                 res.statusCode = 500;
                 res.statusMessage = "Internal Server Error";
@@ -138,6 +140,7 @@ CNCEndpoint.prototype.start = function() {
                 res.statusCode = 200;
                 res.statusMessage = "OK";
             }
+            
             res.end(resStr);
         });
     }).listen(

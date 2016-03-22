@@ -19,7 +19,7 @@ GameServerListPacket.prototype.variableEncode = function(buf) {
         var server = this.servers[i];
         buf.writeUInt16(i);
         buf.writeAsciiString(server.name, 32);
-        buf.writeUInt8((server.playerCount / server.playerLimit) | 0);
+        buf.writeUInt8(server.percentFull);
         buf.writeUInt8(server.gmtOffset);
         buf.writeUInt8(server.ipv4[3]);
         buf.writeUInt8(server.ipv4[2]);

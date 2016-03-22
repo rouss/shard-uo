@@ -73,18 +73,29 @@ MasterCommand.prototype.command = function(cnc, event, ctx) {
             } else {
                 obj = {};
             }
-            obj.sucess = res.statusCode === 200;
+            obj.success = res.statusCode === 200;
             obj.ctx = ctx;
-            events.emit(event, ctx);
+            events.emit(event, obj);
         });
+        
+        res.on("error", function(err) {
+            log.warn("MasterCommand response socket error: " + err);
+        });
+    });
+    
+    req.on("error", function(err) {
+        log.warn("MasterCommand request socket error: " + err);
     });
     
     var cncstr;
     try {
-        cncstr = JSON.parse(cnc);
+        cncstr = JSON.stringify(cnc);
     } catch(e) {
         log.error("Error parsing CNC command object to JSON: " + e);
+        console.log(cnc);
         return;
     }
     req.end(cncstr);    
 };
+
+module.exports = MasterCommand;

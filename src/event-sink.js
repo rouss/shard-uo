@@ -117,7 +117,7 @@ EventSink.prototype.setInterval = function(event, param, delay, immediate) {
         isInterval: true
     };
     if(immediate) {
-        this.emit(event, param);
+        setImmediate(function(){self.emit(event, param);});
     }
 };
 

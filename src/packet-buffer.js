@@ -73,22 +73,25 @@ PacketBuffer.prototype.dump = function() {
     for(var i = this.offset; i < this.end; ++i) {
         var col = i % 16;
         if(i !== 0 && col === 0) {
-            bankStr = bank.toString(16);
+            bankStr = bank.toString(16).toUpperCase();
             while(bankStr.length < 3) {
                 bankStr = "0" + bankStr;
             }
             bankStr += "0";
-            while(dataStr.length < 32) {
+            while(dataStr.length < 47) {
                 dataStr += "  ";
             }
             while(asciiStr.length < 16) {
                 asciiStr += " ";
             }
-            ret += bankStr + "|" + dataStr + "|" + asciiStr + "\n";
+            ret += bankStr + ": " + dataStr + "         " + asciiStr + "\n";
             ++bank;
+            dataStr = "";
+            asciiStr = "";
+            bankStr = "";
         }
         var byte = this.buffer.readUInt8(i);
-        var data = byte.toString(16);
+        var data = byte.toString(16).toUpperCase();
         if(data.length === 1) {
             data = "0" + data;
         }
@@ -97,7 +100,7 @@ PacketBuffer.prototype.dump = function() {
             dataStr += " ";
         }
         var chr;
-        if(byte >= 0x20 && byte <= 0x7f) {
+        if(byte > 0x20 && byte <= 0x7f) {
             chr = String.fromCharCode(byte);
         } else {
             chr = ".";
@@ -105,7 +108,7 @@ PacketBuffer.prototype.dump = function() {
         asciiStr += chr;
     }
     if(dataStr.length > 0) {
-        bankStr = bank.toString(16);
+        bankStr = bank.toString(16).toUpperCase();
         while(bankStr.length < 3) {
             bankStr = "0" + bankStr;
         }
@@ -116,7 +119,7 @@ PacketBuffer.prototype.dump = function() {
         while(asciiStr.length < 16) {
             asciiStr += " ";
         }
-        ret += bankStr + "|" + dataStr + "|" + asciiStr + "\n";
+        ret += bankStr + ": " + dataStr + "        " + asciiStr + "\n";
     }
     return ret;
 };
@@ -284,6 +287,16 @@ PacketBuffer.prototype.writeUnicodeString = function(v, length) {
     var writeLength = Buffer.byteLength(v, "utf16");
     this.buffer.write(v, this.end, length, "utf16");
     this.buffer.fill(0, this.end + writeLength, this.end + length);
+    this.end += length;
+};
+
+/** Fills the buffer with a given value for a given length of bytes.
+ * 
+ * @param {Number} v The byte value to fill with
+ * @param {Number} length The number of bytes to fill
+ */
+PacketBuffer.prototype.fill = function(v, length) {
+    this.buffer.fill(v & 0xFF, this.end, this.end + length);
     this.end += length;
 };
 

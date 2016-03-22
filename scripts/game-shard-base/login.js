@@ -3,6 +3,7 @@
 // Events to handle game shard login
 
 events.on("packetPostLogin", function(packet) {
+    log.debug("PostLogin recieved, key=" + packet.key);
     shard.master.command({
         command: "AccountSession",
         key: packet.key,
@@ -27,7 +28,14 @@ events.on("cncAccountSessionReply", function(res) {
 });
 
 events.on("clientAtCharacterList", function(ns) {
-    var packet = createPacket("CharacterListPacket");
+    var packet = createPacket("FeaturesPacket");
+    packet.features = 0x00001821;
+    //packet.features = 0x007F92DB;
+    ns.sendPacket(packet);
+    
+    packet = createPacket("CharacterListPacket");
+    packet.features = 0x00009040;
+    //packet.features = 0x000011E8;
     // TODO Populate with list of characters and locations
     ns.sendPacket(packet);
 });

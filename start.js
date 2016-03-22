@@ -55,6 +55,10 @@ if(opt.options['print-config']) {
             require("./src/log");
             require("./src/store");
             require("./src/time.js");
+            require("./src/random.js");
+            
+            // Refresh public IP address
+            require("./src/public-ip-lookup");
 
             // Create and start a shard process
             global.shard = require("./src/shard").create();

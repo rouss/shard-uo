@@ -10,12 +10,16 @@ var net = require("net"),
  * @param {EventSink} sink The EventSink to publish UO packet events to.
  * @param {String} host The host IP to bind to.
  * @param {Number} port The port number to bind to.
+ * @param {String} mode The mode to operate in. If equal to "game", the first
+ *   four bytes of the connection data will be ignored.
  */
-function UOPEndpoint(host, port) {
+function UOPEndpoint(host, port, mode) {
     /// The host IP we are bound to
     this.host = host;
     /// The port we are listening to
     this.port = port;
+    /// The operating mode
+    this.mode = mode;
     /// The net.Server object that implements the network endpoint.
     this.server = null;
     /// All {@link NetState} objects by uuid
@@ -32,6 +36,10 @@ UOPEndpoint.prototype.start = function() {
         var state = new NetState(socket, self);
         socket.netState = state;
         self.states[state.uuid] = state;
+        if(self.mode === "game") {
+            state.bytesToIgnore = 4;
+            state.compress = true;
+        }
         
         socket.setNoDelay();
         

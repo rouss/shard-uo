@@ -17,7 +17,7 @@ var crypto = require("crypto"),
  */
 function cryptoInt() {
     var buf = crypto.randomBytes(4);
-    return buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
+    return buf.readUInt32LE();
 }
 
 /** Generates a random integer within an optional range. If two parameters are

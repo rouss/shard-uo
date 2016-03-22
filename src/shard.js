@@ -45,7 +45,7 @@ Shard.prototype.start = function() {
     
     var cfg = config.endpoints.uop;
     if(cfg) {
-        endpoint = new UOPEndpoint(cfg.host, cfg.port);
+        endpoint = new UOPEndpoint(cfg.host, cfg.port, cfg.mode);
         endpoint.start();
         this.endpoints.push(endpoint);        
     }
@@ -58,12 +58,14 @@ Shard.prototype.start = function() {
         this.endpoints.push(endpoint);
     }
     
-    this.master = new MasterCommand(
-        config.masterConnector.host,
-        config.masterConnector.port,
-        config.id,
-        config.masterConnector.apiKey
-    );
+    if(config.masterConnector) {
+        this.master = new MasterCommand(
+            config.masterConnector.host,
+            config.masterConnector.port,
+            config.id,
+            config.masterConnector.apiKey
+        );        
+    }
 };
 
 /** Call this method to reload everything.

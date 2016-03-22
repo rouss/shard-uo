@@ -2,7 +2,8 @@
 
 var uuid = require("uuid"),
     PacketBuffer = require("./packet-buffer"),
-    packets = require("./packets");
+    packets = require("./packets"),
+    compression = require("./compression");
 
 /** Represents the state of a connected UOP client.
  * 
@@ -20,10 +21,16 @@ function NetState(socket, parent) {
     this.inbuf = new PacketBuffer();
     /// The output packet buffer
     this.outbuf = new PacketBuffer();
+    /// The compression buffer
+    this.compressionBuffer = new Buffer(64 * 1024);
     /// The current incomming packet, if null a new packet header is expected
     this.packet = null;
     /// The unique ID of this NetState
     this.uuid = uuid.v4();
+    /// The number of bytes to ignore before the start of the next packet
+    this.bytesToIgnore = 0;
+    /// If true, compress all output
+    this.compress = false;
 }
 
 /** Called by the parent {@link UOPEndpoint} every time there is data pending
@@ -36,6 +43,12 @@ NetState.prototype.handleData = function handleData(buf) {
     while(true) {
         if(this.inbuf.length() <= 0) {
             break;
+        }
+        while(this.bytesToIgnore > 0 &&
+            this.packet === null &&
+            this.inbuf.length() > 0) {
+            this.inbuf.ignore(1);
+            --this.bytesToIgnore;
         }
         if(this.packet === null && this.inbuf.length() > 0) {
             var id = this.inbuf.readUInt8();
@@ -75,7 +88,12 @@ NetState.prototype.sendPacket = function(packet) {
     }
     packet.netState = this;
     packet.encode(this.outbuf);
-    this.socket.write(this.outbuf.activeSlice());
+    var outBuf = this.outbuf.activeSlice();
+    if(this.compress) {
+        var len = compression(outBuf, this.compressionBuffer);
+        outBuf = this.compressionBuffer.slice(0, len);
+    }
+    this.socket.write(outBuf);
     this.outbuf.clear();
 };
 

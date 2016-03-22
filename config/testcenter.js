@@ -28,6 +28,7 @@ var cfg = {
         uop: { // UO packet endpoint
             host: "0.0.0.0",
             port: basePort,
+            mode: "game",
         },
         cnc: { // Encrypted command and control endpoint
             host: "0.0.0.0",
@@ -39,7 +40,7 @@ var cfg = {
     },
     // Information about how to connect to the master server
     masterConnector: {
-        host: "0.0.0.0",
+        host: "127.0.0.1",
         port: 3001,
         apiKey: path.join("keys", name),
     },

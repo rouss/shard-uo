@@ -25,10 +25,10 @@ util.inherits(ServerRedirectPacket, FixedPacket);
 ServerRedirectPacket.id = 0x8C;
 
 ServerRedirectPacket.prototype.fixedEncode = function(buf) {
-    buf.writeUInt8(this.ipv4[3]);
-    buf.writeUInt8(this.ipv4[2]);
-    buf.writeUInt8(this.ipv4[1]);
     buf.writeUInt8(this.ipv4[0]);
+    buf.writeUInt8(this.ipv4[1]);
+    buf.writeUInt8(this.ipv4[2]);
+    buf.writeUInt8(this.ipv4[3]);
     buf.writeUInt16(this.port);
     buf.writeUInt32(this.key);
 };
